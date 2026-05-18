@@ -1,5 +1,10 @@
 plugins {
-    id("idea")
+    alias(libs.plugins.android.application) apply false
+    alias(libs.plugins.android.library) apply false
+    alias(libs.plugins.rikka.autoresconfig) apply false
+    alias(libs.plugins.rikka.materialthemebuilder) apply false
+    alias(libs.plugins.rikka.refine) apply false
+    id 'idea'
 }
 
 idea.module {
@@ -9,12 +14,14 @@ idea.module {
 subprojects {
     plugins.withId("com.android.base") {
         android {
-            compileSdk = 36
-            buildToolsVersion = "36.0.0"
-            ndkVersion = "29.0.13113456"
+            compileSdk {
+                version = release(37)
+            }
+            buildToolsVersion = "37.0.0"
+            ndkVersion = "29.0.14206865"
             defaultConfig {
                 minSdk = 24
-                targetSdk = 36
+                targetSdk = 37
             }
             compileOptions {
                 sourceCompatibility = JavaVersion.VERSION_21

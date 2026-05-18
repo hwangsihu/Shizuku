@@ -1,12 +1,11 @@
 import java.nio.file.Paths
-import com.android.build.gradle.internal.tasks.CompileArtProfileTask
+import com.android.build.api.artifact.SingleArtifact
 
 plugins {
-    id('com.android.application')
-    id('org.jetbrains.kotlin.android')
-    id('dev.rikka.tools.refine')
-    id('dev.rikka.tools.autoresconfig')
-    id('dev.rikka.tools.materialthemebuilder')
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.rikka.refine)
+    alias(libs.plugins.rikka.autoresconfig)
+    alias(libs.plugins.rikka.materialthemebuilder)
 }
 
 android {
@@ -47,10 +46,7 @@ android {
             version = "3.31.0+"
         }
     }
-    kotlinOptions {
-        jvmTarget = "21"
-    }
-    packagingOptions {
+    packaging {
         jniLibs {
             useLegacyPackaging true
         }
@@ -87,54 +83,67 @@ materialThemeBuilder {
     generateTextColors = true
 }
 
-def collapseReleaseResourceNames = task('collapseReleaseResourceNames').doLast {
-    def aapt2 = Paths.get(project.android.sdkDirectory.path, 'build-tools', project.android.buildToolsVersion, 'aapt2')
-    def zip = Paths.get(project.buildDir.path, 'intermediates',
-            'optimized_processed_res', 'release', 'optimizeReleaseResources', 'resources-release-optimize.ap_')
-    def optimized = new File("${zip}.opt")
-    def cmd = exec {
-        commandLine aapt2, 'optimize', '--collapse-resource-names',
-                '--resources-config-path', 'aapt2-resources.cfg',
-                '-o', optimized, zip
-        ignoreExitValue false
-    }
-    if (cmd.exitValue == 0) {
-        delete(zip)
-        optimized.renameTo("$zip")
+def collapseReleaseResourceNames = tasks.register('collapseReleaseResourceNames') {
+    doLast {
+        def aapt2 = Paths.get(project.android.sdkDirectory.path, 'build-tools', project.android.buildToolsVersion, 'aapt2')
+        def zip = Paths.get(project.layout.buildDirectory.get().asFile.path, 'intermediates',
+                'optimized_processed_res', 'release', 'optimizeReleaseResources', 'resources-release-optimize.ap_')
+        def optimized = new File("${zip}.opt")
+        def cmd = exec {
+            commandLine aapt2, 'optimize', '--collapse-resource-names',
+                    '--resources-config-path', 'aapt2-resources.cfg',
+                    '-o', optimized, zip
+            ignoreExitValue false
+        }
+        if (cmd.exitValue == 0) {
+            delete(zip)
+            optimized.renameTo("$zip")
+        }
     }
 }
 
 afterEvaluate {
     tasks.getByName('optimizeReleaseResources').finalizedBy(collapseReleaseResourceNames)
-    tasks.getByName('preReleaseBuild').dependsOn(':shell:assembleRelease')
-    tasks.getByName('preDebugBuild').dependsOn(':shell:assembleDebug')
+    tasks.getByName('preReleaseBuild').dependsOn(':shell:extractRishReleaseDex')
+    tasks.getByName('preDebugBuild').dependsOn(':shell:extractRishDebugDex')
 }
 
-android.applicationVariants.configureEach { variant ->
-    variant.outputs.configureEach {
-        outputFileName = "shizuku-v${variant.versionName}-${variant.name}.apk"
+androidComponents {
+    onVariants(selector().all()) { variant ->
+        def variantName = variant.name
+        def capName = variantName.substring(0, 1).toUpperCase() + variantName.substring(1)
 
-        variant.assembleProvider.get().doLast {
+        if (variantName == "release") {
+            def apkDir = variant.artifacts.get(SingleArtifact.APK)
+            def mappingFile = variant.artifacts.get(SingleArtifact.OBFUSCATION_MAPPING_FILE)
             def outDir = new File(rootDir, "out")
-            def mappingDir = new File(outDir, "mapping").absolutePath
-            def apkDir = new File(outDir, "apk").absolutePath
+            def apkOutDir = new File(outDir, "apk")
+            def mappingOutDir = new File(outDir, "mapping")
+            def versionNameProvider = variant.outputs.first().versionName
 
-            if (variant.getBuildType().isMinifyEnabled()) {
-                copy {
-                    from variant.mappingFileProvider.get()
-                    into mappingDir
-                    rename { String fileName -> "mapping-${variant.versionName}.txt" }
-                }
-                copy {
-                    from outputFile
-                    into apkDir
+            def copyArtifacts = tasks.register("copyShizuku${capName}Artifacts") {
+                inputs.dir(apkDir)
+                inputs.file(mappingFile)
+                doLast {
+                    def apkFile = apkDir.get().asFile.listFiles().find { it.name.endsWith(".apk") }
+                    copy {
+                        from apkFile
+                        into apkOutDir
+                        rename { "shizuku-v${versionNameProvider.get()}-${variantName}.apk" }
+                    }
+                    copy {
+                        from mappingFile.get().asFile
+                        into mappingOutDir
+                        rename { "mapping-${versionNameProvider.get()}.txt" }
+                    }
                 }
             }
+            tasks.named("assemble${capName}").configure { finalizedBy(copyArtifacts) }
         }
     }
 }
 
-tasks.withType(CompileArtProfileTask.class).configureEach {
+tasks.matching { it.name ==~ /compile.*ArtProfile/ }.configureEach {
     enabled = false
 }
 configurations.configureEach {
