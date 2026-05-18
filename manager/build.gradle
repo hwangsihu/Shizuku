@@ -152,8 +152,8 @@ configurations.configureEach {
 }
 
 dependencies {
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0'
 
     implementation project(':server')
     implementation project(':rish')
@@ -192,12 +192,12 @@ dependencies {
     implementation 'dev.rikka.rikkax.lifecycle:lifecycle-shared-viewmodel:1.0.1'
     implementation 'dev.rikka.rikkax.lifecycle:lifecycle-viewmodel-lazy:2.0.0'
 
-    implementation 'io.github.vvb2060.ndk:boringssl:20250114'
-    implementation 'org.lsposed.libcxx:libcxx:27.0.12077973'
+    implementation 'io.github.vvb2060.ndk:boringssl:20251124'
+    implementation 'org.lsposed.libcxx:libcxx:29.0.14206865'
 
     implementation 'org.lsposed.hiddenapibypass:hiddenapibypass:6.1'
 
-    implementation 'org.bouncycastle:bcpkix-jdk18on:1.80'
+    implementation 'org.bouncycastle:bcpkix-jdk18on:1.84'
 
     implementation 'me.zhanghai.android.appiconloader:appiconloader:1.5.0'
 }
