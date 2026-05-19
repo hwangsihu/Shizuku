@@ -9,5 +9,7 @@
 .externalNativeBuild
 /.idea
 /manager/signing.properties
+/manager/keystore.properties
 /out
 /signing.properties
+/keystore.properties

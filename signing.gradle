@@ -1,7 +1,17 @@
-def ksFile = rootProject.file('signing.properties')
-def props = new Properties()
-if (ksFile.canRead()) {
-    props.load(new FileInputStream(ksFile))
+def keystoreFile = rootProject.file('keystore.properties')
+def signingFile = rootProject.file('signing.properties')
+
+if (keystoreFile.canRead()) {
+    def ks = new Properties()
+    keystoreFile.withInputStream { ks.load(it) }
+
+    android.signingConfigs.sign.storeFile = rootProject.file(ks['storeFile'])
+    android.signingConfigs.sign.storePassword = ks['storePassword']
+    android.signingConfigs.sign.keyAlias = ks['keyAlias']
+    android.signingConfigs.sign.keyPassword = ks['keyPassword']
+} else if (signingFile.canRead()) {
+    def props = new Properties()
+    props.load(new FileInputStream(signingFile))
 
     if (props != null) {
         android.signingConfigs.sign.storeFile file(props['KEYSTORE_FILE'])
