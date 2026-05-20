@@ -85,27 +85,28 @@ materialThemeBuilder {
 
 def collapseReleaseResourceNames = tasks.register('collapseReleaseResourceNames') {
     doLast {
-        def aapt2 = Paths.get(project.android.sdkDirectory.path, 'build-tools', project.android.buildToolsVersion, 'aapt2')
+        def sdkDir = System.getenv('ANDROID_HOME') ?: System.getenv('ANDROID_SDK_ROOT')
+        def aapt2 = Paths.get(sdkDir, 'build-tools', android.buildToolsVersion, 'aapt2')
         def zip = Paths.get(project.layout.buildDirectory.get().asFile.path, 'intermediates',
                 'optimized_processed_res', 'release', 'optimizeReleaseResources', 'resources-release-optimize.ap_')
         def optimized = new File("${zip}.opt")
-        def cmd = exec {
-            commandLine aapt2, 'optimize', '--collapse-resource-names',
-                    '--resources-config-path', 'aapt2-resources.cfg',
-                    '-o', optimized, zip
-            ignoreExitValue false
+        def pb = new ProcessBuilder([aapt2.toString(), 'optimize', '--collapse-resource-names',
+                '--resources-config-path', file('aapt2-resources.cfg').absolutePath,
+                '-o', optimized.toString(), zip.toString()])
+        pb.inheritIO()
+        def rc = pb.start().waitFor()
+        if (rc != 0) {
+            throw new GradleException("aapt2 optimize failed with exit code " + rc)
         }
-        if (cmd.exitValue == 0) {
-            delete(zip)
-            optimized.renameTo("$zip")
-        }
+        java.nio.file.Files.deleteIfExists(zip)
+        optimized.renameTo("$zip")
     }
 }
 
 afterEvaluate {
-    tasks.getByName('optimizeReleaseResources').finalizedBy(collapseReleaseResourceNames)
-    tasks.getByName('preReleaseBuild').dependsOn(':shell:extractRishReleaseDex')
-    tasks.getByName('preDebugBuild').dependsOn(':shell:extractRishDebugDex')
+    tasks.matching { it.name == 'optimizeReleaseResources' }.configureEach { finalizedBy(collapseReleaseResourceNames) }
+    tasks.matching { it.name == 'preReleaseBuild' }.configureEach { dependsOn(':shell:extractRishReleaseDex') }
+    tasks.matching { it.name == 'preDebugBuild' }.configureEach { dependsOn(':shell:extractRishDebugDex') }
 }
 
 androidComponents {
@@ -114,8 +115,8 @@ androidComponents {
         def capName = variantName.substring(0, 1).toUpperCase() + variantName.substring(1)
 
         if (variantName == "release") {
-            def apkDir = variant.artifacts.get(SingleArtifact.APK)
-            def mappingFile = variant.artifacts.get(SingleArtifact.OBFUSCATION_MAPPING_FILE)
+            def apkDir = variant.artifacts.get(SingleArtifact.APK.INSTANCE)
+            def mappingFile = variant.artifacts.get(SingleArtifact.OBFUSCATION_MAPPING_FILE.INSTANCE)
             def outDir = new File(rootDir, "out")
             def apkOutDir = new File(outDir, "apk")
             def mappingOutDir = new File(outDir, "mapping")
@@ -138,7 +139,7 @@ androidComponents {
                     }
                 }
             }
-            tasks.named("assemble${capName}").configure { finalizedBy(copyArtifacts) }
+            tasks.matching { it.name == "assemble${capName}" }.configureEach { finalizedBy(copyArtifacts) }
         }
     }
 }

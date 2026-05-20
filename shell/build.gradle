@@ -35,20 +35,20 @@ androidComponents {
     onVariants(selector().all()) { variant ->
         def variantName = variant.name
         def capName = variantName.substring(0, 1).toUpperCase() + variantName.substring(1)
-        def apkDir = variant.artifacts.get(SingleArtifact.APK)
+        def apkDir = variant.artifacts.get(SingleArtifact.APK.INSTANCE)
         def mappingFile = (variantName == "release")
-                ? variant.artifacts.get(SingleArtifact.OBFUSCATION_MAPPING_FILE)
+                ? variant.artifacts.get(SingleArtifact.OBFUSCATION_MAPPING_FILE.INSTANCE)
                 : null
         def dexOutDir = file("${rootProject.rootDir.path}/manager/src/main/assets")
         def mappingOutDir = new File(new File(rootDir, "out"), "mapping")
         def versionNameProvider = variant.outputs.first().versionName
 
         tasks.register("extractRish${capName}Dex") {
-            dependsOn("assemble${capName}")
+            dependsOn(tasks.matching { it.name == "assemble${capName}" })
             inputs.dir(apkDir)
             outputs.file(new File(dexOutDir, "rish_shizuku.dex"))
             doLast {
-                def apkFile = apkDir.get().asFile.listFiles().find { it.name.endsWith(".apk") }
+                def apkFile = apkDir.get().getAsFile().listFiles().find { it.name.endsWith(".apk") }
                 def dexFile = zipTree(apkFile).matching { include 'classes*.dex' }.singleFile
                 copy {
                     from dexFile
@@ -57,7 +57,7 @@ androidComponents {
                 }
                 if (mappingFile != null) {
                     copy {
-                        from mappingFile.get().asFile
+                        from mappingFile.get().getAsFile()
                         into mappingOutDir
                         rename { "cmd-v${versionNameProvider.get()}.txt" }
                     }
