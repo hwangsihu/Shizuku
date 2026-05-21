@@ -7,8 +7,7 @@ pluginManagement {
         maven {
             url 'https://jitpack.io'
             content {
-                includeGroup 'dev.rikka.tools.autoresconfig'
-                includeGroup 'dev.rikka.tools.materialthemebuilder'
+                includeGroupByRegex 'io\\.github\\.hwangsihu\\..*'
             }
         }
     }

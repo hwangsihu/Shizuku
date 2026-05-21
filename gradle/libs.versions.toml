@@ -2,8 +2,8 @@
 agp = "9.2.1"
 hidden-api = "4.4.0"
 refine = "4.4.0"
-autoresconfig = "1.3.0"
-materialthemebuilder = "1.4.0"
+autoresconfig = "1.3.1"
+materialthemebuilder = "1.4.1"
 
 [libraries]
 hidden-compat = { group = "dev.rikka.hidden", name = "compat", version.ref = "hidden-api" }
@@ -15,6 +15,6 @@ refine-annotation-processor = { group = "dev.rikka.tools.refine", name = "annota
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
-rikka-autoresconfig = { id = "dev.rikka.tools.autoresconfig", version.ref = "autoresconfig" }
-rikka-materialthemebuilder = { id = "dev.rikka.tools.materialthemebuilder", version.ref = "materialthemebuilder" }
+rikka-autoresconfig = { id = "io.github.hwangsihu.autoresconfig", version.ref = "autoresconfig" }
+rikka-materialthemebuilder = { id = "io.github.hwangsihu.materialthemebuilder", version.ref = "materialthemebuilder" }
 rikka-refine = { id = "dev.rikka.tools.refine", version.ref = "refine" }
