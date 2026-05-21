@@ -15,10 +15,6 @@ jobs:
         with:
           submodules: 'recursive'
           fetch-depth: 0
-      - name: Checkout forked plugins
-        run: |
-          git clone --depth 1 https://github.com/hwangsihu/AutoResConfig.git "$GITHUB_WORKSPACE/../AutoResConfig"
-          git clone --depth 1 --recurse-submodules https://github.com/hwangsihu/MaterialThemeBuilder.git "$GITHUB_WORKSPACE/../MaterialThemeBuilder"
       - name: Setup Java
         uses: actions/setup-java@v5
         with:

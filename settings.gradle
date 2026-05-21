@@ -1,11 +1,16 @@
 pluginManagement {
-    includeBuild '../AutoResConfig'
-    includeBuild '../MaterialThemeBuilder'
     repositories {
         google()
         mavenCentral()
         gradlePluginPortal()
         mavenLocal()
+        maven {
+            url 'https://jitpack.io'
+            content {
+                includeGroup 'dev.rikka.tools.autoresconfig'
+                includeGroup 'dev.rikka.tools.materialthemebuilder'
+            }
+        }
     }
 }
 
